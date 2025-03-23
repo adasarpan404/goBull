@@ -73,3 +73,31 @@ Now, your existing project can use GoBull for background job processing! 🎉
 |------------------------------------------------------|-----------------------------------------|
 | `RegisterHandler(jobType string, handler func(*Job) error)` | Registers a worker for a job type       |
 | `Start()`                                            | Starts consuming jobs                   |
+
+## Roadmap 🛣️
+
+✅ Redis-based queue
+✅ Delayed jobs
+✅ Automatic retries
+✅ Multiple workers
+⏳ Dead-letter queue
+⏳ Priority job scheduling
+⏳ Web UI for monitoring jobs
+
+## Contributing 🤝
+
+We welcome contributions! Feel free to:
+
+- Open an issue for bug reports and feature requests.
+
+- Submit a pull request with new features or fixes.
+
+1. Fork the repository
+
+2. Create a feature branch (git checkout -b feature-new)
+
+3. Commit changes (git commit -m "Added new feature")
+
+4. Push to the branch (git push origin feature-new)
+
+5. Open a Pull Request
