@@ -21,7 +21,7 @@ func (w *Worker) RegisterHandler(jobType string, handler func(*Job) error) {
 	w.handlers[jobType] = handler
 }
 
-func (w *Worker) start() {
+func (w *Worker) Start() {
 	fmt.Println("Worker Started......")
 
 	for {
