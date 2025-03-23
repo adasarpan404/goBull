@@ -20,32 +20,32 @@ GoBull is a lightweight, high-performance message queue built in Go, inspired by
 
 To use GoBull in your existing Go project, follow these steps:
 
-    1. Install GoBull as a Module
+1. Install GoBull as a Module
 
     ```bash
     go get github.com/yourusername/gobull
     ```
 
-    2. Import GoBull in your project
+2. Import GoBull in your project
 
     ```go
     import "github.com/yourusername/gobull/queue"
     ```
 
-    3. Create a Queue in Your Application
+3. Create a Queue in Your Application
 
     ```go
     q:= queue.NewQueue("my_tasks", "localhost:6379")
     ```
 
-    4. Add Jobs from Your Existing Code
+4. Add Jobs from Your Existing Code
 
     ```go
     job := queue.Job{ID: "123", Data: "send_email", Delay: 10}
     q.AddJob(job)
     ```
 
-    5. Start a Worker to Process Jobs
+5. Start a Worker to Process Jobs
 
     ```go
     worker := queue.NewWorker(q)
@@ -56,7 +56,7 @@ To use GoBull in your existing Go project, follow these steps:
     worker.Start()
     ```
 
-    Now, your existing project can use GoBull for background job processing! 🎉
+Now, your existing project can use GoBull for background job processing! 🎉
 
 ## API Reference 📌
 
@@ -67,7 +67,7 @@ To use GoBull in your existing Go project, follow these steps:
 | `AddJob(job Job) error` | Adds a job to the queue                 |
 | `GetJob() (*Job, error)` | Retrieves and removes a job from the queue |
 
-### Worker Methods
+## Worker Methods
 
 | Method                                               | Description                             |
 |------------------------------------------------------|-----------------------------------------|
