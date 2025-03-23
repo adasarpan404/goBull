@@ -1,6 +1,9 @@
 package queue
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Worker struct {
 	queue    *Queue
@@ -25,7 +28,26 @@ func (w *Worker) start() {
 		job, err := w.queue.GetJob()
 
 		if err != nil {
-			fmt.Println()
+			fmt.Println("Error fetching job:", err)
+			continue
+		}
+
+		handler, exists := w.handlers[job.Data]
+		if !exists {
+			fmt.Println("No handler found for job:", job.Data)
+			continue
+		}
+		fmt.Println("Processing job:", job.ID)
+		err = handler(job)
+		if err != nil {
+			fmt.Println("Error processing job:", err)
+			// Retry logic
+			job.Attempts++
+			if job.Attempts < 3 {
+				fmt.Println("Retrying job:", job.ID)
+				time.Sleep(2 * time.Second)
+				_ = w.queue.AddJob(*job)
+			}
 		}
 	}
 }
