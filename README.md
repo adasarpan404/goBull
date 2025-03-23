@@ -20,14 +20,15 @@ GoBull is a lightweight, high-performance message queue built in Go, inspired by
 
 To use GoBull in your existing Go project, follow these steps:
 
-1; Install GoBull as a Module
+1.Install GoBull as a Module
 
 ```bash
 go get github.com/yourusername/gobull
 ```
 
-2; Import GoBull in your project
+2.Import GoBull in your project
 
 ```go
 import "github.com/yourusername/gobull/queue"
 ```
+
