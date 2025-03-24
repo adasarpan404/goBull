@@ -23,13 +23,13 @@ To use GoBull in your existing Go project, follow these steps:
 1. Install GoBull as a Module
 
     ```bash
-    go get github.com/yourusername/gobull
+    go get github.com/adasarpan404/gobull
     ```
 
 2. Import GoBull in your project
 
     ```go
-    import "github.com/yourusername/gobull/queue"
+    import "github.com/adasarpan404/gobull/queue"
     ```
 
 3. Create a Queue in Your Application
