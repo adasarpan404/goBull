@@ -26,7 +26,7 @@ func TestAddAndGetJob(t *testing.T) {
 		t.Fatalf("AddJob failed: %v", err)
 	}
 
-	got, err := q.GetJob()
+	got, err := q.GetJob(context.Background())
 	if err != nil {
 		t.Fatalf("GetJob failed: %v", err)
 	}
@@ -121,8 +121,10 @@ func TestRetryLogic(t *testing.T) {
 
 	w.RegisterHandler("retry", handler)
 
-	// run worker in background
-	go w.Start()
+	// run worker in background with cancellable context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go w.Start(ctx)
 
 	// add job
 	job := Job{ID: "r1", Data: "retry", Delay: 0}
@@ -135,7 +137,10 @@ func TestRetryLogic(t *testing.T) {
 		if attempts < 1 {
 			t.Fatalf("expected attempts>=1 after retry, got %d", attempts)
 		}
+		// stop worker
+		cancel()
 	case <-time.After(6 * time.Second):
+		cancel()
 		t.Fatalf("timeout waiting for job to be retried and processed")
 	}
 }

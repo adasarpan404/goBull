@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -30,5 +31,13 @@ func RunConsumer() {
 	worker.RegisterHandler("email", sendEmail)
 	worker.RegisterHandler("report", generateReport)
 
-	worker.Start()
+	// run with a cancellable context for demo purposes
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go worker.Start(ctx)
+
+	// demo run for a short time
+	time.Sleep(5 * time.Second)
+	cancel()
 }

@@ -52,8 +52,8 @@ func (q *Queue) AddJob(job Job) error {
 	return q.client.LPush(q.ctx, q.name, jobJSON).Err()
 }
 
-func (q *Queue) GetJob() (*Job, error) {
-	jobstr, err := q.client.BRPop(q.ctx, 0*time.Second, q.name).Result()
+func (q *Queue) GetJob(ctx context.Context) (*Job, error) {
+	jobstr, err := q.client.BRPop(ctx, 0*time.Second, q.name).Result()
 	if err != nil {
 		return nil, err
 	}

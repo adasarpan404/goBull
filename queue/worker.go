@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -21,11 +22,19 @@ func (w *Worker) RegisterHandler(jobType string, handler func(*Job) error) {
 	w.handlers[jobType] = handler
 }
 
-func (w *Worker) Start() {
+// Start runs the worker loop until the provided context is cancelled.
+func (w *Worker) Start(ctx context.Context) {
 	fmt.Println("Worker Started......")
 
 	for {
-		job, err := w.queue.GetJob()
+		select {
+		case <-ctx.Done():
+			fmt.Println("Worker stopped by context")
+			return
+		default:
+		}
+
+		job, err := w.queue.GetJob(ctx)
 
 		if err != nil {
 			fmt.Println("Error fetching job:", err)
