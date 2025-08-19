@@ -1,4 +1,4 @@
-package main
+package examples
 
 import (
 	"fmt"
@@ -21,7 +21,9 @@ func generateReport(job *queue.Job) error {
 	return nil
 }
 
-func main() {
+// RunConsumer demonstrates starting a worker. It's not a main function so the
+// package builds during `go test`.
+func RunConsumer() {
 	q := queue.NewQueue("tasks", "localhost:6379")
 	worker := queue.NewWorker(q)
 
