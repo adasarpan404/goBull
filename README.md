@@ -1,103 +1,113 @@
-# GoBull - A Redis-backed Message Queue in Go
+# GoBull
 
-GoBull is a lightweight, high-performance message queue built in Go, inspired by BullMQ. It provides job **scheduling**, **delayed execution**, **automatic retries**, and **distributed processing** using Redis.
+GoBull is a small Redis-backed job queue written in Go. It aims to be
+easy to use in development and production, with support for delayed jobs,
+automatic retries, simple worker registration, and a small test surface.
 
-## Features 🚀
+This repository contains the core `queue` package and a couple of
+examples to demonstrate usage.
 
-- **Job Queuing** - Push jobs to a queue and process them asynchronously.
+## Quick overview
 
-- **Delayed Jobs** - Schedule jobs to run after a specific delay.
+- Queue: create with `queue.NewQueue(name, redisAddr)`; add jobs with
+    `AddJob(Job)` and fetch with `GetJob()`.
+- Worker: `NewWorker(queue)` → `RegisterHandler(jobType, handler)` →
+    `Start()` to begin processing.
 
-- **Automatic Retries** - Failed jobs are retried with exponential backoff.
+The API is intentionally small so it is easy to reason about and test.
 
-- **Worker System** - Register workers to handle specific job types.
+## Getting started (local)
 
-- **Distributed Processing** - Scale workers across multiple instances.
+Prerequisites
 
-- **Persistent Storage** - Uses Redis to store and manage jobs.
+- Go (module-aware) matching the project `go.mod` (this repo uses Go 1.23+)
+- Redis for running examples; tests use an in-memory Redis (miniredis)
 
-## Integrating GoBull in an Existing Project 🛠️
+Clone and prepare:
 
-To use GoBull in your existing Go project, follow these steps:
+```bash
+git clone https://github.com/adasarpan404/goBull.git
+cd goBull
+go mod tidy
+```
 
-1. Install GoBull as a Module
+Run tests (this uses miniredis so you don't need a running Redis):
 
-    ```bash
-    go get github.com/adasarpan404/gobull
-    ```
+```bash
+go test ./... -v
+```
 
-2. Import GoBull in your project
+## Usage examples
 
-    ```go
-    import "github.com/adasarpan404/gobull/queue"
-    ```
+Library usage (example):
 
-3. Create a Queue in Your Application
+```go
+package main
 
-    ```go
-    q:= queue.NewQueue("my_tasks", "localhost:6379")
-    ```
+import (
+        "fmt"
+        "time"
 
-4. Add Jobs from Your Existing Code
+        "github.com/adasarpan404/goBull/queue"
+)
 
-    ```go
-    job := queue.Job{ID: "123", Data: "send_email", Delay: 10}
-    q.AddJob(job)
-    ```
+func main() {
+        q := queue.NewQueue("tasks", "localhost:6379")
 
-5. Start a Worker to Process Jobs
+        // add a job
+        job := queue.Job{ID: "1", Data: "email", Delay: 0}
+        if err := q.AddJob(job); err != nil {
+                panic(err)
+        }
 
-    ```go
-    worker := queue.NewWorker(q)
-    worker.RegisterHandler("send_email", func(job *queue.Job) error {
-        fmt.Println("Processing email job:", job.ID)
-        return nil
-    })
-    worker.Start()
-    ```
+        // start a worker
+        w := queue.NewWorker(q)
+        w.RegisterHandler("email", func(j *queue.Job) error {
+                fmt.Println("processing job", j.ID)
+                time.Sleep(1 * time.Second)
+                return nil
+        })
 
-Now, your existing project can use GoBull for background job processing! 🎉
+        // run worker (blocking)
+        w.Start()
+}
+```
 
-## API Reference 📌
+Notes about the `examples/` package
 
-### Queue Methods
+- The files in `examples/` provide helper functions (e.g. `RunProducer`,
+    `RunConsumer`) rather than `main` functions so they build during tests.
+    To run them directly, call those functions from a small `main` program
+    like the snippet above.
 
-| Method               | Description                             |
-|----------------------|-----------------------------------------|
-| `AddJob(job Job) error` | Adds a job to the queue                 |
-| `GetJob() (*Job, error)` | Retrieves and removes a job from the queue |
+## Tests and development
 
-## Worker Methods
+- Unit tests use `github.com/alicebob/miniredis/v2` so they run without
+    a real Redis server.
+- To run a single package tests:
 
-| Method                                               | Description                             |
-|------------------------------------------------------|-----------------------------------------|
-| `RegisterHandler(jobType string, handler func(*Job) error)` | Registers a worker for a job type       |
-| `Start()`                                            | Starts consuming jobs                   |
+```bash
+go test ./queue -v
+```
 
-## Roadmap 🛣️
+If you want to run examples against a real Redis instance, start Redis
+locally (e.g. via Docker) and run your small `main` program.
 
-✅ Redis-based queue
-✅ Delayed jobs
-✅ Automatic retries
-✅ Multiple workers
-⏳ Dead-letter queue
-⏳ Priority job scheduling
-⏳ Web UI for monitoring jobs
+## Next improvements (roadmap)
 
-## Contributing 🤝
+- Dead-letter queue (DLQ) and configurable retry/backoff behavior
+- Prometheus metrics and observability
+- A tiny web UI for inspecting queues and DLQ
+- Official Docker image and docker-compose for local development
 
-We welcome contributions! Feel free to:
+## Contributing
 
-- Open an issue for bug reports and feature requests.
+Contributions are welcome. Please open issues for feature requests or
+bugs. If you send a pull request, include tests and a short description
+of the change.
 
-- Submit a pull request with new features or fixes.
+## Where to go from here
 
-1. Fork the repository
-
-2. Create a feature branch (git checkout -b feature-new)
-
-3. Commit changes (git commit -m "Added new feature")
-
-4. Push to the branch (git push origin feature-new)
-
-5. Open a Pull Request
+- Run the tests: `go test ./... -v`
+- Try the snippet above with a local Redis
+- I can open PRs to add DLQ support, metrics, CI, or a CLI if you want—tell me which to prioritize.
