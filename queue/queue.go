@@ -64,3 +64,13 @@ func (q *Queue) GetJob(ctx context.Context) (*Job, error) {
 	}
 	return &job, nil
 }
+
+// AddToDLQ stores a job into the dead-letter queue list.
+func (q *Queue) AddToDLQ(ctx context.Context, job Job) error {
+	job.TimeStamp = time.Now()
+	jobJSON, err := json.Marshal(job)
+	if err != nil {
+		return err
+	}
+	return q.client.LPush(ctx, q.name+":dlq", jobJSON).Err()
+}

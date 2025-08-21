@@ -7,14 +7,16 @@ import (
 )
 
 type Worker struct {
-	queue    *Queue
-	handlers map[string]func(*Job) error
+	queue       *Queue
+	handlers    map[string]func(*Job) error
+	MaxAttempts int
 }
 
 func NewWorker(queue *Queue) *Worker {
 	return &Worker{
-		queue:    queue,
-		handlers: make(map[string]func(*Job) error),
+		queue:       queue,
+		handlers:    make(map[string]func(*Job) error),
+		MaxAttempts: 3,
 	}
 }
 
@@ -52,10 +54,14 @@ func (w *Worker) Start(ctx context.Context) {
 			fmt.Println("Error processing job:", err)
 			// Retry logic
 			job.Attempts++
-			if job.Attempts < 3 {
+			if job.Attempts < w.MaxAttempts {
 				fmt.Println("Retrying job:", job.ID)
 				time.Sleep(2 * time.Second)
 				_ = w.queue.AddJob(*job)
+			} else {
+				fmt.Println("Moving job to DLQ:", job.ID)
+				// best-effort DLQ push
+				_ = w.queue.AddToDLQ(ctx, *job)
 			}
 		}
 	}

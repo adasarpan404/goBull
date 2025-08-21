@@ -182,3 +182,48 @@ func TestDelayedJobScore(t *testing.T) {
 		t.Fatalf("expected score around %d, got %d", expected, score)
 	}
 }
+
+// TestDLQBehavior verifies that jobs exceeding MaxAttempts are moved to DLQ.
+func TestDLQBehavior(t *testing.T) {
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("failed to start miniredis: %v", err)
+	}
+	defer mr.Close()
+
+	q := NewQueue("tasks", mr.Addr())
+	w := NewWorker(q)
+	w.MaxAttempts = 2
+
+	// handler always fails
+	handler := func(j *Job) error {
+		return fmt.Errorf("permanent failure")
+	}
+	w.RegisterHandler("permanent", handler)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go w.Start(ctx)
+
+	job := Job{ID: "dlq1", Data: "permanent", Delay: 0}
+	if err := q.AddJob(job); err != nil {
+		t.Fatalf("AddJob failed: %v", err)
+	}
+
+	// wait for the job to be moved to dlq
+	deadline := time.Now().Add(6 * time.Second)
+	found := false
+	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	for time.Now().Before(deadline) {
+		n, _ := client.LLen(context.Background(), "tasks:dlq").Result()
+		if n > 0 {
+			found = true
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	if !found {
+		t.Fatalf("expected job in dlq but none found")
+	}
+}
